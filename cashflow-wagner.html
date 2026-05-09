@@ -1,0 +1,688 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Cashflow">
+<title>Cashflow – Robert Wagner</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #080a10; --bg2: #0d0f18; --bg3: #0f1117; --bg4: #0a0c14; --bg5: #141720;
+    --border: #1e2130; --border2: #1a1d27;
+    --text: #e2e8f0; --text2: #94a3b8; --text3: #64748b; --text4: #475569; --text5: #334155;
+    --green: #34d399; --green2: #86efac; --red: #f87171; --orange: #fb923c;
+    --yellow: #f59e0b; --purple: #c084fc; --blue: #3b82f6; --blue2: #60a5fa;
+    --font: 'DM Sans', 'Segoe UI', sans-serif; --mono: 'DM Mono', monospace;
+  }
+  html, body { background: var(--bg); color: var(--text); font-family: var(--font); min-height: 100vh; -webkit-font-smoothing: antialiased; }
+  ::-webkit-scrollbar { width: 4px; } ::-webkit-scrollbar-track { background: var(--bg3); } ::-webkit-scrollbar-thumb { background: #2a2d3a; border-radius: 2px; }
+  input, select, button, textarea { font-family: var(--font); outline: none; }
+
+  /* Header */
+  .header { background: var(--bg2); border-bottom: 1px solid var(--border); padding: 20px 20px 0; position: sticky; top: 0; z-index: 50; }
+  .header-top { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 20px; }
+  .header-label { font-size: 10px; letter-spacing: 3px; color: var(--text5); text-transform: uppercase; margin-bottom: 6px; }
+  .header-name { font-size: 20px; font-weight: 700; }
+  .header-date { font-size: 11px; color: var(--text4); margin-top: 2px; }
+  .balance-label { font-size: 10px; color: var(--text4); margin-bottom: 4px; letter-spacing: 1px; text-align: right; }
+  .balance-val { font-size: 22px; font-weight: 700; font-family: var(--mono); cursor: pointer; text-align: right; }
+  .balance-hint { font-size: 10px; color: var(--text5); margin-top: 2px; text-align: right; }
+  .balance-edit { display: flex; gap: 6px; }
+  .balance-input { background: var(--bg4); border: 1px solid var(--blue); border-radius: 8px; padding: 6px 10px; color: var(--text); font-size: 14px; width: 120px; font-family: var(--mono); }
+  .balance-save { background: var(--blue); border: none; border-radius: 8px; color: #fff; padding: 6px 12px; cursor: pointer; font-size: 14px; }
+
+  /* Tabs */
+  .tabs { display: flex; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .tabs::-webkit-scrollbar { display: none; }
+  .tab { background: none; border: none; border-bottom: 2px solid transparent; color: var(--text4); padding: 8px 14px; font-size: 12px; font-weight: 600; cursor: pointer; white-space: nowrap; transition: all 0.2s; letter-spacing: 0.5px; }
+  .tab.active { border-bottom-color: var(--blue); color: var(--blue2); }
+
+  /* Content */
+  .content { padding: 20px; max-width: 700px; margin: 0 auto; }
+
+  /* KPI Cards */
+  .kpi-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; margin-bottom: 20px; }
+  .kpi-card { background: var(--bg3); border: 1px solid var(--border); border-radius: 10px; padding: 14px 12px; }
+  .kpi-label { font-size: 9px; color: var(--text5); letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 6px; }
+  .kpi-val { font-size: 15px; font-weight: 700; font-family: var(--mono); }
+
+  /* Chart card */
+  .chart-card { background: var(--bg3); border: 1px solid var(--border); border-radius: 12px; padding: 16px; margin-bottom: 20px; }
+  .card-title { font-size: 10px; color: var(--text4); letter-spacing: 2px; text-transform: uppercase; font-weight: 600; margin-bottom: 14px; }
+
+  /* Table */
+  .table-card { background: var(--bg3); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; margin-bottom: 16px; }
+  .table-header { padding: 12px 16px; border-bottom: 1px solid var(--border2); font-size: 10px; color: var(--text4); letter-spacing: 2px; text-transform: uppercase; font-weight: 600; }
+  table { width: 100%; border-collapse: collapse; }
+  th { padding: 8px 12px; font-size: 9px; color: var(--text4); text-align: left; letter-spacing: 1px; text-transform: uppercase; font-weight: 600; background: var(--bg4); }
+  td { padding: 10px 12px; font-size: 12px; border-top: 1px solid var(--border2); }
+  tr:hover td { background: var(--bg5); }
+
+  /* Section blocks */
+  .section { background: var(--bg3); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; margin-bottom: 14px; }
+  .section-header { padding: 12px 16px; border-bottom: 1px solid var(--border2); display: flex; justify-content: space-between; align-items: center; }
+  .section-title { font-size: 10px; color: var(--text4); letter-spacing: 2px; text-transform: uppercase; font-weight: 600; }
+  .row { display: flex; align-items: center; padding: 10px 16px; border-bottom: 1px solid #0d0f18; transition: background 0.15s; }
+  .row:hover { background: var(--bg5); }
+  .row-info { flex: 1; }
+  .row-name { font-size: 13px; color: #cbd5e1; }
+  .row-sub { font-size: 10px; color: var(--text4); margin-top: 2px; }
+  .row-val { font-size: 13px; font-weight: 600; font-family: var(--mono); margin-right: 10px; }
+  .del-btn { opacity: 0; background: none; border: none; color: #ef4444; font-size: 18px; cursor: pointer; padding: 0 4px; line-height: 1; transition: opacity 0.2s; flex-shrink: 0; }
+  .row:hover .del-btn { opacity: 1; }
+
+  /* Forms */
+  .form-card { background: var(--bg3); border-radius: 12px; padding: 16px; margin-bottom: 16px; }
+  .form-label { font-size: 11px; color: var(--text3); letter-spacing: 1px; margin-bottom: 10px; }
+  .form-grid { display: grid; gap: 8px; }
+  .form-row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .inp { background: var(--bg4); border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; color: var(--text); font-size: 13px; width: 100%; }
+  .inp:focus { border-color: var(--blue); }
+  .btn-row { display: flex; gap: 8px; }
+  .btn-primary { flex: 1; padding: 10px; background: #1d4ed8; border: none; border-radius: 8px; color: #fff; font-size: 13px; font-weight: 600; cursor: pointer; }
+  .btn-secondary { flex: 1; padding: 10px; background: #1a1d27; border: 1px solid #334155; border-radius: 8px; color: var(--text2); font-size: 13px; cursor: pointer; }
+  .btn-green { background: #166534; }
+  .add-btn { width: 100%; padding: 13px; background: var(--bg3); border: 1px dashed #334155; border-radius: 12px; color: var(--text3); font-size: 13px; cursor: pointer; display: block; text-align: center; transition: opacity 0.2s; margin-bottom: 16px; }
+  .add-btn:hover { opacity: 0.8; }
+  .add-btn-blue { border-color: #1d4ed8; color: var(--blue2); }
+  .add-btn-green { border-color: #16a34a; color: #4ade80; }
+  .cta-btn { width: 100%; padding: 14px; background: linear-gradient(135deg,#1e3a5f,#1d4ed8); border: 1px solid var(--blue); border-radius: 12px; color: #93c5fd; font-size: 13px; font-weight: 600; cursor: pointer; transition: opacity 0.2s; }
+  .cta-btn:hover { opacity: 0.85; }
+
+  /* Detail rows */
+  .detail-card { background: var(--bg3); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; margin-bottom: 12px; }
+  .detail-header { display: flex; justify-content: space-between; align-items: center; padding: 14px 16px; border-bottom: 1px solid var(--border2); }
+  .detail-month { font-size: 15px; font-weight: 700; }
+  .detail-bal { font-size: 16px; font-weight: 700; font-family: var(--mono); }
+  .detail-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 16px; border-bottom: 1px solid #0d0f18; cursor: pointer; transition: background 0.15s; }
+  .detail-row:hover { background: var(--bg5); }
+  .detail-row-left { display: flex; align-items: center; gap: 8px; }
+  .detail-row-label { font-size: 12px; color: var(--text4); }
+  .detail-badge { font-size: 9px; color: var(--text5); border: 1px solid var(--border); border-radius: 4px; padding: 1px 5px; letter-spacing: 0.5px; }
+  .detail-row-val { font-size: 13px; font-weight: 600; font-family: var(--mono); }
+  .detail-netto { display: flex; justify-content: space-between; padding: 10px 16px; }
+  .detail-netto-label { font-size: 13px; font-weight: 700; color: var(--text2); }
+  .detail-netto-val { font-size: 14px; font-weight: 700; font-family: var(--mono); }
+
+  /* Drawer */
+  .drawer-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.75); z-index: 100; display: flex; align-items: flex-end; justify-content: center; animation: fadeIn 0.2s; }
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+  .drawer { background: var(--bg3); border: 1px solid var(--border); border-radius: 16px 16px 0 0; width: 100%; max-width: 600px; max-height: 70vh; display: flex; flex-direction: column; animation: slideUp 0.25s ease-out; }
+  @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+  .drawer-header { display: flex; justify-content: space-between; align-items: center; padding: 16px 20px; border-bottom: 1px solid var(--border); }
+  .drawer-month { font-size: 10px; color: var(--text4); letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 3px; }
+  .drawer-title { font-size: 16px; font-weight: 700; }
+  .drawer-close { background: #1a1d27; border: 1px solid #334155; border-radius: 8px; color: var(--text2); font-size: 20px; width: 34px; height: 34px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+  .drawer-items { overflow-y: auto; flex: 1; }
+  .drawer-item { display: flex; align-items: center; padding: 12px 20px; border-bottom: 1px solid #0d0f18; }
+  .drawer-dot { width: 6px; height: 6px; border-radius: 50%; margin-right: 12px; flex-shrink: 0; }
+  .drawer-item-name { font-size: 13px; color: var(--text); font-weight: 500; }
+  .drawer-item-sub { font-size: 11px; color: var(--text4); margin-top: 2px; }
+  .drawer-item-val { font-size: 14px; font-weight: 700; font-family: var(--mono); margin-left: auto; }
+  .drawer-footer { padding: 12px 20px; border-top: 1px solid var(--border); display: flex; justify-content: space-between; background: var(--bg4); }
+  .drawer-footer-label { font-size: 12px; color: var(--text3); font-weight: 600; }
+  .drawer-footer-val { font-size: 14px; font-weight: 700; font-family: var(--mono); }
+  .drawer-empty { text-align: center; padding: 30px; color: var(--text5); font-size: 13px; }
+
+  /* Misc */
+  .empty { text-align: center; padding: 40px 20px; color: var(--text5); font-size: 13px; }
+  .mono { font-family: var(--mono); }
+  .hidden { display: none !important; }
+</style>
+</head>
+<body>
+
+<!-- Header -->
+<div class="header">
+  <div class="header-top">
+    <div>
+      <div class="header-label">Cashflow Prognose</div>
+      <div class="header-name">Robert Wagner</div>
+      <div class="header-date" id="dateRange">Mai 2026 — Oktober 2026</div>
+    </div>
+    <div>
+      <div class="balance-label">GIROKONTO</div>
+      <div id="balanceDisplay" class="balance-val" onclick="startEditBalance()"></div>
+      <div id="balanceEdit" class="balance-edit hidden">
+        <input id="balanceInput" class="balance-input" type="text" onkeydown="if(event.key==='Enter')saveBalance()">
+        <button class="balance-save" onclick="saveBalance()">✓</button>
+      </div>
+      <div class="balance-hint">Tippen zum Bearbeiten</div>
+    </div>
+  </div>
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('dashboard',this)">Prognose</button>
+    <button class="tab" onclick="switchTab('fixkosten',this)">Fixkosten</button>
+    <button class="tab" onclick="switchTab('variabel',this)">Variable</button>
+    <button class="tab" onclick="switchTab('sonderein',this)">Sonder-Ein.</button>
+    <button class="tab" onclick="switchTab('detail',this)">Details</button>
+  </div>
+</div>
+
+<!-- Content -->
+<div class="content">
+  <div id="tab-dashboard"></div>
+  <div id="tab-fixkosten" class="hidden"></div>
+  <div id="tab-variabel" class="hidden"></div>
+  <div id="tab-sonderein" class="hidden"></div>
+  <div id="tab-detail" class="hidden"></div>
+</div>
+
+<!-- Drawer -->
+<div id="drawerOverlay" class="drawer-overlay hidden" onclick="closeDrawer()">
+  <div class="drawer" onclick="event.stopPropagation()">
+    <div class="drawer-header">
+      <div>
+        <div class="drawer-month" id="drawerMonth"></div>
+        <div class="drawer-title" id="drawerTitle"></div>
+      </div>
+      <div style="display:flex;align-items:center;gap:12px">
+        <div class="drawer-footer-val" id="drawerHeaderVal"></div>
+        <button class="drawer-close" onclick="closeDrawer()">×</button>
+      </div>
+    </div>
+    <div class="drawer-items" id="drawerItems"></div>
+    <div class="drawer-footer">
+      <span class="drawer-footer-label" id="drawerFooterLabel"></span>
+      <span class="drawer-footer-val" id="drawerFooterVal"></span>
+    </div>
+  </div>
+</div>
+
+<script>
+const STORAGE_KEY = 'cashflow-wagner-v1';
+const MONTHS = ['Jan','Feb','Mär','Apr','Mai','Jun','Jul','Aug','Sep','Okt','Nov','Dez'];
+const MONTHS_LONG = ['Januar','Februar','März','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember'];
+
+const DEFAULT_DATA = {
+  kontostand: 2171.76,
+  einnahmen: [
+    { id: 1, name: 'Bergman Germany HoldCo', betrag: 5997.92, tag: 25 },
+    { id: 2, name: 'Tim Hoffmann', betrag: 16.00, tag: 1 },
+  ],
+  fixkosten_monatlich: [
+    { id: 1,  name: 'Debeka Krankenversicherung',  betrag: 950.00, tag: 2 },
+    { id: 2,  name: 'IB SH (Hypothek 1)',          betrag: 270.83, tag: 2 },
+    { id: 3,  name: 'IB SH (Hypothek 2)',          betrag: 73.02,  tag: 2 },
+    { id: 4,  name: 'ING Hauskredit',              betrag: 712.86, tag: 28 },
+    { id: 5,  name: 'Postbank / Deutsche Bank',    betrag: 118.00, tag: 2 },
+    { id: 6,  name: 'Vodafone',                    betrag: 39.98,  tag: 19 },
+    { id: 7,  name: 'wilhelm.tel',                 betrag: 44.90,  tag: 30 },
+    { id: 8,  name: 'Trade Republic',              betrag: 50.00,  tag: 26 },
+    { id: 9,  name: 'Dela Lebensversicherung',     betrag: 6.89,   tag: 2 },
+    { id: 10, name: 'Apple.com',                   betrag: 2.99,   tag: 16 },
+    { id: 11, name: 'American Express (Fix)',       betrag: 60.00,  tag: 6 },
+    { id: 12, name: 'Claude Pro (Anthropic)',       betrag: 20.00,  tag: 1 },
+    { id: 13, name: 'Spotify Premium Family',      betrag: 21.99,  tag: 1 },
+  ],
+  fixkosten_quartal: [
+    { id: 1, name: 'Müllgebühren Norderstedt', betrag: 172.28, tag: 16, monate: [2,5,8,11] },
+    { id: 2, name: 'Grundsteuer B',             betrag: 118.82, tag: 15, monate: [8,11] },
+  ],
+  sonderausgaben: [
+    { id: 1, name: 'Autoversicherung',         betrag: 900.00,  datum: '2026-06-01' },
+    { id: 2, name: 'KFZ-Steuer',               betrag: 120.00,  datum: '2026-07-01' },
+    { id: 3, name: 'Grundsteuer B (1. Rate)',  betrag: 237.64,  datum: '2026-06-04' },
+    { id: 4, name: 'Grundsteuer B (2. Rate)',  betrag: 118.82,  datum: '2026-08-15' },
+    { id: 5, name: 'Grundsteuer B (3. Rate)',  betrag: 118.82,  datum: '2026-11-15' },
+  ],
+  variable_ausgaben: [],
+  sonder_einnahmen: [],
+};
+
+// ── State ──────────────────────────────────────────────────────────────────
+let data = JSON.parse(JSON.stringify(DEFAULT_DATA));
+let activeTab = 'dashboard';
+let drawerData = null;
+
+function load() {
+  try {
+    const s = localStorage.getItem(STORAGE_KEY);
+    if (s) data = JSON.parse(s);
+  } catch {}
+}
+
+function save() {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); } catch {}
+}
+
+// ── Helpers ────────────────────────────────────────────────────────────────
+function fmt(n) {
+  return n.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €';
+}
+
+function fmtDate(s) {
+  return new Date(s).toLocaleDateString('de-DE');
+}
+
+function computeMonths() {
+  const TODAY_YEAR = 2026, TODAY_MONTH = 4; // Mai = 4 (0-indexed)
+  const months = [];
+  let rolling = data.kontostand;
+  for (let i = 0; i < 6; i++) {
+    const total = TODAY_MONTH + i;
+    const year = TODAY_YEAR + Math.floor(total / 12);
+    const month = total % 12;
+    const label = MONTHS[month] + ' ' + year;
+    const einnahmen = data.einnahmen.reduce((s, e) => s + e.betrag, 0);
+    const fixMo = data.fixkosten_monatlich.reduce((s, f) => s + f.betrag, 0);
+    const fixQ = data.fixkosten_quartal.reduce((s, f) => f.monate.includes(month + 1) ? s + f.betrag : s, 0);
+    const sonder = data.sonderausgaben.reduce((s, se) => {
+      const d = new Date(se.datum);
+      return (d.getFullYear() === year && d.getMonth() === month) ? s + se.betrag : s;
+    }, 0);
+    const varAus = (data.variable_ausgaben || []).reduce((s, va) => {
+      const d = new Date(va.datum);
+      return (d.getFullYear() === year && d.getMonth() === month) ? s + va.betrag : s;
+    }, 0);
+    const sonderEin = (data.sonder_einnahmen || []).reduce((s, se) => {
+      const d = new Date(se.datum);
+      return (d.getFullYear() === year && d.getMonth() === month) ? s + se.betrag : s;
+    }, 0);
+    const totalAus = fixMo + fixQ + sonder + varAus;
+    const netto = einnahmen + sonderEin - totalAus;
+    rolling += netto;
+    months.push({ label, year, month, monthName: MONTHS_LONG[month], einnahmen, sonderEin, fixMo, fixQ, sonder, varAus, totalAus, netto, endBalance: rolling });
+  }
+  return months;
+}
+
+function balColor(v) { return v >= 0 ? 'var(--green)' : '#ef4444'; }
+function posColor(v) { return v >= 0 ? 'var(--green)' : '#ef4444'; }
+function endColor(v) { return v >= 1000 ? 'var(--text)' : v >= 0 ? 'var(--yellow)' : '#ef4444'; }
+
+// ── Balance edit ───────────────────────────────────────────────────────────
+function startEditBalance() {
+  document.getElementById('balanceDisplay').classList.add('hidden');
+  document.getElementById('balanceEdit').classList.remove('hidden');
+  const inp = document.getElementById('balanceInput');
+  inp.value = data.kontostand.toFixed(2).replace('.', ',');
+  inp.focus(); inp.select();
+}
+
+function saveBalance() {
+  const val = parseFloat(document.getElementById('balanceInput').value.replace(',', '.'));
+  if (!isNaN(val)) { data.kontostand = val; save(); render(); }
+  document.getElementById('balanceDisplay').classList.remove('hidden');
+  document.getElementById('balanceEdit').classList.add('hidden');
+}
+
+function renderBalance() {
+  const el = document.getElementById('balanceDisplay');
+  el.textContent = fmt(data.kontostand);
+  el.style.color = data.kontostand >= 0 ? 'var(--green)' : '#ef4444';
+}
+
+// ── Tab switching ──────────────────────────────────────────────────────────
+function switchTab(tab, btn) {
+  activeTab = tab;
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+  document.querySelectorAll('[id^=tab-]').forEach(el => el.classList.add('hidden'));
+  document.getElementById('tab-' + tab).classList.remove('hidden');
+  renderTab(tab);
+}
+
+// ── Render dispatcher ──────────────────────────────────────────────────────
+function render() {
+  renderBalance();
+  renderTab(activeTab);
+}
+
+function renderTab(tab) {
+  if (tab === 'dashboard') renderDashboard();
+  else if (tab === 'fixkosten') renderFixkosten();
+  else if (tab === 'variabel') renderVariabel();
+  else if (tab === 'sonderein') renderSonderEin();
+  else if (tab === 'detail') renderDetail();
+}
+
+// ── Dashboard ──────────────────────────────────────────────────────────────
+function renderDashboard() {
+  const months = computeMonths();
+  const totalEin = data.einnahmen.reduce((s, e) => s + e.betrag, 0);
+  const totalFixMo = data.fixkosten_monatlich.reduce((s, f) => s + f.betrag, 0);
+  const avgNetto = months.reduce((s, m) => s + m.netto, 0) / 6;
+
+  let html = `
+    <div class="kpi-grid">
+      <div class="kpi-card"><div class="kpi-label">Einnahmen / Monat</div><div class="kpi-val" style="color:var(--green)">${fmt(totalEin)}</div></div>
+      <div class="kpi-card"><div class="kpi-label">Fixkosten / Monat</div><div class="kpi-val" style="color:var(--red)">${fmt(totalFixMo)}</div></div>
+      <div class="kpi-card"><div class="kpi-label">Ø Netto / Monat</div><div class="kpi-val" style="color:${balColor(avgNetto)}">${avgNetto>=0?'+':''}${fmt(avgNetto)}</div></div>
+    </div>
+    <div class="table-card">
+      <div class="table-header">Monatliche Übersicht</div>
+      <div style="overflow-x:auto">
+        <table>
+          <thead><tr><th>Monat</th><th>Einnahmen</th><th>Fixkosten</th><th>Variabel</th><th>Netto</th><th>Endstand</th></tr></thead>
+          <tbody>`;
+
+  months.forEach(m => {
+    html += `<tr>
+      <td style="color:var(--text2);font-weight:600">${m.label}</td>
+      <td class="mono" style="color:var(--green)">+${fmt(m.einnahmen)}</td>
+      <td class="mono" style="color:var(--red)">-${fmt(m.totalAus - m.varAus)}</td>
+      <td class="mono" style="color:${m.varAus>0?'var(--orange)':'var(--text5)'}">${m.varAus>0?'-'+fmt(m.varAus):'—'}</td>
+      <td class="mono" style="color:${posColor(m.netto)};font-weight:700">${m.netto>=0?'+':''}${fmt(m.netto)}</td>
+      <td class="mono" style="color:${endColor(m.endBalance)};font-weight:700">${fmt(m.endBalance)}</td>
+    </tr>`;
+  });
+
+  html += `</tbody></table></div></div>
+    <button class="cta-btn" onclick="switchTab('variabel',document.querySelectorAll('.tab')[2])">+ Kreditkarte / Variable Ausgabe eintragen</button>`;
+
+  document.getElementById('tab-dashboard').innerHTML = html;
+}
+
+// ── Fixkosten ──────────────────────────────────────────────────────────────
+function renderFixkosten() {
+  const totalFixMo = data.fixkosten_monatlich.reduce((s, f) => s + f.betrag, 0);
+  let rows = data.fixkosten_monatlich.map(f => `
+    <div class="row">
+      <div class="row-info"><div class="row-name">${f.name}</div><div class="row-sub">Fällig: ${f.tag}. des Monats</div></div>
+      <span class="row-val" style="color:var(--red)">-${fmt(f.betrag)}</span>
+      <button class="del-btn" onclick="removeFixMo(${f.id})">×</button>
+    </div>`).join('');
+
+  let qRows = data.fixkosten_quartal.map(f => `
+    <div class="row">
+      <div class="row-info"><div class="row-name">${f.name}</div><div class="row-sub">Monate: ${f.monate.map(m=>MONTHS[m-1]).join(', ')}</div></div>
+      <span class="row-val" style="color:var(--yellow)">-${fmt(f.betrag)}</span>
+    </div>`).join('');
+
+  let sRows = data.sonderausgaben.map(s => `
+    <div class="row">
+      <div class="row-info"><div class="row-name">${s.name}</div><div class="row-sub">${fmtDate(s.datum)}</div></div>
+      <span class="row-val" style="color:var(--purple)">-${fmt(s.betrag)}</span>
+      <button class="del-btn" onclick="removeSonder(${s.id})">×</button>
+    </div>`).join('');
+
+  document.getElementById('tab-fixkosten').innerHTML = `
+    <div class="section">
+      <div class="section-header">
+        <span class="section-title">Monatliche Fixkosten</span>
+        <span class="mono" style="font-size:12px;color:var(--red);font-weight:700">${fmt(totalFixMo)}</span>
+      </div>
+      ${rows}
+    </div>
+    <div class="section">
+      <div class="section-header"><span class="section-title">Quartalweise Fixkosten</span></div>
+      ${qRows}
+    </div>
+    <div class="section">
+      <div class="section-header"><span class="section-title">Einmalige / Jährliche</span></div>
+      ${sRows}
+      <div style="padding:8px 16px 12px">
+        <button class="add-btn" style="margin:0" onclick="promptSonder()">+ Sonderausgabe hinzufügen</button>
+      </div>
+    </div>
+    <div id="fixForm" class="hidden form-card" style="border:1px solid var(--blue)">
+      <div class="form-label">NEUE MONATLICHE FIXKOSTEN</div>
+      <div class="form-grid">
+        <input class="inp" id="fixName" placeholder="Bezeichnung">
+        <div class="form-row2">
+          <input class="inp" id="fixBetrag" type="number" placeholder="Betrag €">
+          <input class="inp" id="fixTag" type="number" placeholder="Fällig (Tag)">
+        </div>
+        <div class="btn-row">
+          <button class="btn-primary" onclick="addFixMo()">Hinzufügen</button>
+          <button class="btn-secondary" onclick="document.getElementById('fixForm').classList.add('hidden')">Abbrechen</button>
+        </div>
+      </div>
+    </div>
+    <button class="add-btn" onclick="document.getElementById('fixForm').classList.remove('hidden')">+ Neue Fixkosten hinzufügen</button>`;
+}
+
+function removeFixMo(id) {
+  data.fixkosten_monatlich = data.fixkosten_monatlich.filter(f => f.id !== id);
+  save(); renderFixkosten();
+}
+
+function removeSonder(id) {
+  data.sonderausgaben = data.sonderausgaben.filter(s => s.id !== id);
+  save(); renderFixkosten();
+}
+
+function addFixMo() {
+  const name = document.getElementById('fixName').value.trim();
+  const betrag = parseFloat(document.getElementById('fixBetrag').value);
+  const tag = parseInt(document.getElementById('fixTag').value) || 1;
+  if (!name || isNaN(betrag)) return;
+  data.fixkosten_monatlich.push({ id: Date.now(), name, betrag, tag });
+  save(); renderFixkosten();
+}
+
+function promptSonder() {
+  const name = prompt('Bezeichnung:'); if (!name) return;
+  const betrag = parseFloat(prompt('Betrag (€):') || '0');
+  const datum = prompt('Datum (JJJJ-MM-TT):') || '2026-12-01';
+  data.sonderausgaben.push({ id: Date.now(), name, betrag, datum });
+  save(); renderFixkosten();
+}
+
+// ── Variable ───────────────────────────────────────────────────────────────
+function renderVariabel() {
+  const total = (data.variable_ausgaben || []).reduce((s, v) => s + v.betrag, 0);
+  const items = [...(data.variable_ausgaben || [])].sort((a,b) => new Date(b.datum)-new Date(a.datum));
+
+  const rows = items.length === 0
+    ? `<div class="empty">Noch keine variablen Ausgaben — trag hier deine Amex & Hanseatic Abrechnungen ein</div>`
+    : `<div class="section">${items.map(v => `
+        <div class="row">
+          <div class="row-info"><div class="row-name">${v.name}</div><div class="row-sub">${v.kategorie} · ${fmtDate(v.datum)}</div></div>
+          <span class="row-val" style="color:var(--orange)">-${fmt(v.betrag)}</span>
+          <button class="del-btn" onclick="removeVariable(${v.id})">×</button>
+        </div>`).join('')}
+      </div>`;
+
+  document.getElementById('tab-variabel').innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+      <span style="font-size:10px;color:var(--text4);letter-spacing:2px;text-transform:uppercase">Variable Ausgaben</span>
+      <span style="font-size:12px;color:var(--text3)">Gesamt: <span class="mono" style="color:var(--orange);font-weight:700">${fmt(total)}</span></span>
+    </div>
+    <div id="varForm" class="hidden form-card" style="border:1px solid var(--blue);margin-bottom:16px">
+      <div class="form-label">NEUE AUSGABE EINTRAGEN</div>
+      <div class="form-grid">
+        <div class="form-row2">
+          <select class="inp" id="varKat">
+            <option>Kreditkarte Amex</option>
+            <option>Kreditkarte Hanseatic</option>
+            <option>Einkauf</option>
+            <option>Restaurant</option>
+            <option>Reise</option>
+            <option>Shopping</option>
+            <option>Sonstiges</option>
+          </select>
+          <input class="inp" id="varDatum" type="date">
+        </div>
+        <input class="inp" id="varName" placeholder="Bezeichnung (z.B. Amex Abrechnung Mai)">
+        <input class="inp" id="varBetrag" type="number" placeholder="Betrag €">
+        <div class="btn-row">
+          <button class="btn-primary" onclick="addVariable()">Eintragen → Prognose aktualisiert</button>
+          <button class="btn-secondary" onclick="document.getElementById('varForm').classList.add('hidden')">✕</button>
+        </div>
+      </div>
+    </div>
+    <button class="add-btn add-btn-blue" onclick="document.getElementById('varForm').classList.remove('hidden')">+ Kreditkarten-Abrechnung / Variable Ausgabe eintragen</button>
+    ${rows}`;
+}
+
+function removeVariable(id) {
+  data.variable_ausgaben = (data.variable_ausgaben || []).filter(v => v.id !== id);
+  save(); renderVariabel();
+}
+
+function addVariable() {
+  const name = document.getElementById('varName').value.trim();
+  const betrag = parseFloat(document.getElementById('varBetrag').value);
+  const datum = document.getElementById('varDatum').value;
+  const kategorie = document.getElementById('varKat').value;
+  if (!name || isNaN(betrag) || !datum) return;
+  if (!data.variable_ausgaben) data.variable_ausgaben = [];
+  data.variable_ausgaben.push({ id: Date.now(), name, betrag, datum, kategorie });
+  save(); renderVariabel();
+}
+
+// ── Sonder-Einnahmen ───────────────────────────────────────────────────────
+function renderSonderEin() {
+  const items = [...(data.sonder_einnahmen || [])].sort((a,b) => new Date(b.datum)-new Date(a.datum));
+  const total = items.reduce((s,v) => s + v.betrag, 0);
+
+  const rows = items.length === 0
+    ? `<div class="empty">Noch keine Sonder-Einnahmen — trag hier Bonus, PKV-Erstattung oder Steuerrückerstattung ein</div>`
+    : `<div class="section">${items.map(v => `
+        <div class="row">
+          <div class="row-info"><div class="row-name">${v.name}</div><div class="row-sub">${v.kategorie} · ${fmtDate(v.datum)}</div></div>
+          <span class="row-val" style="color:var(--green)">+${fmt(v.betrag)}</span>
+          <button class="del-btn" onclick="removeSonderEin(${v.id})">×</button>
+        </div>`).join('')}
+      </div>`;
+
+  document.getElementById('tab-sonderein').innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+      <span style="font-size:10px;color:var(--text4);letter-spacing:2px;text-transform:uppercase">Sonder-Einnahmen</span>
+      <span style="font-size:12px;color:var(--text3)">Gesamt: <span class="mono" style="color:var(--green);font-weight:700">${fmt(total)}</span></span>
+    </div>
+    <div id="seinForm" class="hidden form-card" style="border:1px solid #16a34a;margin-bottom:16px">
+      <div class="form-label">NEUE SONDER-EINNAHME</div>
+      <div class="form-grid">
+        <div class="form-row2">
+          <select class="inp" id="seinKat">
+            <option>Bonus AG</option>
+            <option>PKV-Erstattung</option>
+            <option>Steuerrückerstattung</option>
+            <option>Sonstiges</option>
+          </select>
+          <input class="inp" id="seinDatum" type="date">
+        </div>
+        <input class="inp" id="seinName" placeholder="Bezeichnung (z.B. Jahresbonus 2026)">
+        <input class="inp" id="seinBetrag" type="number" placeholder="Betrag €">
+        <div class="btn-row">
+          <button class="btn-primary btn-green" onclick="addSonderEin()">Eintragen → Prognose aktualisiert</button>
+          <button class="btn-secondary" onclick="document.getElementById('seinForm').classList.add('hidden')">✕</button>
+        </div>
+      </div>
+    </div>
+    <button class="add-btn add-btn-green" onclick="document.getElementById('seinForm').classList.remove('hidden')">+ Bonus / PKV-Erstattung / Steuerrückerstattung eintragen</button>
+    ${rows}`;
+}
+
+function removeSonderEin(id) {
+  data.sonder_einnahmen = (data.sonder_einnahmen || []).filter(s => s.id !== id);
+  save(); renderSonderEin();
+}
+
+function addSonderEin() {
+  const name = document.getElementById('seinName').value.trim();
+  const betrag = parseFloat(document.getElementById('seinBetrag').value);
+  const datum = document.getElementById('seinDatum').value;
+  const kategorie = document.getElementById('seinKat').value;
+  if (!name || isNaN(betrag) || !datum) return;
+  if (!data.sonder_einnahmen) data.sonder_einnahmen = [];
+  data.sonder_einnahmen.push({ id: Date.now(), name, betrag, datum, kategorie });
+  save(); renderSonderEin();
+}
+
+// ── Detail ─────────────────────────────────────────────────────────────────
+function renderDetail() {
+  const months = computeMonths();
+  let html = '';
+
+  months.forEach(m => {
+    const rows = [
+      { key:'ein', label:'Gehalt & Einnahmen', value:`+${fmt(m.einnahmen)}`, color:'var(--green)',
+        items: data.einnahmen.map(e => ({ name:e.name, betrag:e.betrag, sub:`Fällig: ${e.tag}. des Monats`, sign:'+' })) },
+      ...(m.sonderEin > 0 ? [{
+        key:'sondEin', label:'Sonder-Einnahmen', value:`+${fmt(m.sonderEin)}`, color:'var(--green2)',
+        items: (data.sonder_einnahmen||[]).filter(s => { const d=new Date(s.datum); return d.getFullYear()===m.year && d.getMonth()===m.month; })
+          .map(s => ({ name:s.name, betrag:s.betrag, sub:`${s.kategorie} · ${fmtDate(s.datum)}`, sign:'+' }))
+      }] : []),
+      { key:'fix', label:'Fixkosten monatl.', value:`-${fmt(m.fixMo)}`, color:'var(--red)',
+        items: data.fixkosten_monatlich.map(f => ({ name:f.name, betrag:f.betrag, sub:`Fällig: ${f.tag}. des Monats`, sign:'-' })) },
+      ...(m.fixQ > 0 ? [{
+        key:'fixQ', label:'Fixkosten quartalsw.', value:`-${fmt(m.fixQ)}`, color:'var(--yellow)',
+        items: data.fixkosten_quartal.filter(f => f.monate.includes(m.month+1))
+          .map(f => ({ name:f.name, betrag:f.betrag, sub:`Quartalsweise · Tag ${f.tag}`, sign:'-' }))
+      }] : []),
+      ...(m.sonder > 0 ? [{
+        key:'sond', label:'Sonderausgaben', value:`-${fmt(m.sonder)}`, color:'var(--purple)',
+        items: data.sonderausgaben.filter(s => { const d=new Date(s.datum); return d.getFullYear()===m.year && d.getMonth()===m.month; })
+          .map(s => ({ name:s.name, betrag:s.betrag, sub:fmtDate(s.datum), sign:'-' }))
+      }] : []),
+      ...(m.varAus > 0 ? [{
+        key:'var', label:'Variable / Kreditkarten', value:`-${fmt(m.varAus)}`, color:'var(--orange)',
+        items: (data.variable_ausgaben||[]).filter(v => { const d=new Date(v.datum); return d.getFullYear()===m.year && d.getMonth()===m.month; })
+          .map(v => ({ name:v.name, betrag:v.betrag, sub:`${v.kategorie} · ${fmtDate(v.datum)}`, sign:'-' }))
+      }] : []),
+    ];
+
+    const detailRows = rows.map(row => `
+      <div class="detail-row" onclick='openDrawer(${JSON.stringify(m.label)},${JSON.stringify(row.label)},${JSON.stringify(row.value)},${JSON.stringify(row.color)},${JSON.stringify(row.items)})'>
+        <div class="detail-row-left">
+          <span class="detail-row-label">${row.label}</span>
+          <span class="detail-badge">Details ›</span>
+        </div>
+        <span class="detail-row-val" style="color:${row.color}">${row.value}</span>
+      </div>`).join('');
+
+    html += `
+      <div class="detail-card">
+        <div class="detail-header">
+          <div class="detail-month">${m.monthName} ${m.year}</div>
+          <div class="detail-bal" style="color:${endColor(m.endBalance)}">${fmt(m.endBalance)}</div>
+        </div>
+        ${detailRows}
+        <div class="detail-netto">
+          <span class="detail-netto-label">Netto</span>
+          <span class="detail-netto-val" style="color:${posColor(m.netto)}">${m.netto>=0?'+':''}${fmt(m.netto)}</span>
+        </div>
+      </div>`;
+  });
+
+  document.getElementById('tab-detail').innerHTML = html;
+}
+
+// ── Drawer ─────────────────────────────────────────────────────────────────
+function openDrawer(month, label, value, color, items) {
+  document.getElementById('drawerMonth').textContent = month;
+  document.getElementById('drawerTitle').textContent = label;
+  document.getElementById('drawerTitle').style.color = color;
+  document.getElementById('drawerHeaderVal').textContent = value;
+  document.getElementById('drawerHeaderVal').style.color = color;
+  document.getElementById('drawerFooterVal').textContent = value;
+  document.getElementById('drawerFooterVal').style.color = color;
+  document.getElementById('drawerFooterLabel').textContent = `${items.length} Posten`;
+
+  const container = document.getElementById('drawerItems');
+  if (items.length === 0) {
+    container.innerHTML = '<div class="drawer-empty">Keine Einträge für diesen Monat</div>';
+  } else {
+    container.innerHTML = items.map(item => `
+      <div class="drawer-item">
+        <div class="drawer-dot" style="background:${color}"></div>
+        <div style="flex:1">
+          <div class="drawer-item-name">${item.name}</div>
+          <div class="drawer-item-sub">${item.sub}</div>
+        </div>
+        <div class="drawer-item-val" style="color:${color}">${item.sign}${fmt(item.betrag)}</div>
+      </div>`).join('');
+  }
+
+  document.getElementById('drawerOverlay').classList.remove('hidden');
+}
+
+function closeDrawer() {
+  document.getElementById('drawerOverlay').classList.add('hidden');
+}
+
+// ── Init ───────────────────────────────────────────────────────────────────
+load();
+render();
+</script>
+</body>
+</html>
