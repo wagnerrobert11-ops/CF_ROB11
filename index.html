@@ -143,7 +143,7 @@
     <div>
       <div class="header-label">Cashflow Prognose</div>
       <div class="header-name">Robert Wagner</div>
-      <div class="header-date" id="dateRange">Mai 2026 — Oktober 2026</div>
+      <div class="header-date" id="dateRange"></div>
     </div>
     <div>
       <div class="balance-label">GIROKONTO</div>
@@ -261,7 +261,8 @@ function fmtDate(s) {
 }
 
 function computeMonths() {
-  const TODAY_YEAR = 2026, TODAY_MONTH = 4; // Mai = 4 (0-indexed)
+  const _now = new Date();
+  const TODAY_YEAR = _now.getFullYear(), TODAY_MONTH = _now.getMonth(); // 0-indexed
   const months = [];
   let rolling = data.kontostand;
   for (let i = 0; i < 6; i++) {
@@ -682,6 +683,14 @@ function closeDrawer() {
 
 // ── Init ───────────────────────────────────────────────────────────────────
 load();
+
+// Dynamic date range header
+const _start = new Date();
+const _end = new Date(_start.getFullYear(), _start.getMonth() + 5, 1);
+document.getElementById('dateRange').textContent =
+  MONTHS_LONG[_start.getMonth()] + ' ' + _start.getFullYear() +
+  ' — ' +
+  MONTHS_LONG[_end.getMonth()] + ' ' + _end.getFullYear();
 render();
 </script>
 </body>
